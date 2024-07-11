@@ -6,13 +6,18 @@
     "start": "next start"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.6",
     "@stripe/react-stripe-js": "2.4.0",
     "@stripe/stripe-js": "2.2.2",
+    "@t3-oss/env-core": "^0.10.1",
+    "@vis.gl/react-google-maps": "^1.1.0",
+    "jotai": "^2.8.4",
     "next": "latest",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "server-only": "0.0.1",
-    "stripe": "14.8.0"
+    "stripe": "14.8.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "20.4.6",

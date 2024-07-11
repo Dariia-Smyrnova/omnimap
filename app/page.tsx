@@ -1,41 +1,27 @@
 import type { Metadata } from "next";
-
-import Link from "next/link";
+import { MapLinksApp } from "../components/MapLinks";
+import { env } from "../env";
+import { GoogleMap } from "components/Map";
 
 export const metadata: Metadata = {
-  title: "Home | Next.js + TypeScript Example",
+  title: "Google Maps Links | Next.js + TypeScript Example",
 };
 
 export default function IndexPage(): JSX.Element {
   return (
-    <ul className="card-list">
-      <li>
-        <Link
-          href="/donate-with-embedded-checkout"
-          className="card checkout-style-background"
-        >
-          <h2 className="bottom">Donate with embedded Checkout</h2>
-          <img src="/checkout-one-time-payments.svg" />
-        </Link>
-      </li>
-      <li>
-        <Link
-          href="/donate-with-checkout"
-          className="card checkout-style-background"
-        >
-          <h2 className="bottom">Donate with hosted Checkout</h2>
-          <img src="/checkout-one-time-payments.svg" />
-        </Link>
-      </li>
-      <li>
-        <Link
-          href="/donate-with-elements"
-          className="card elements-style-background"
-        >
-          <h2 className="bottom">Donate with Elements</h2>
-          <img src="/elements-card-payment.svg" />
-        </Link>
-      </li>
-    </ul>
+    <div>
+      {/* <iframe
+        width="450"
+        height="250"
+        frameBorder="0" style={{ "border": "0" }}
+        referrerPolicy="no-referrer-when-downgrade"
+        src={`https://www.google.com/maps/embed/v1/place?key=${env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=Eiffel+Tower`}
+        allowFullScreen>
+      </iframe> */}
+      <GoogleMap />
+      <h1>Google Maps Links Manager</h1>
+
+      <MapLinksApp />
+    </div>
   );
 }
