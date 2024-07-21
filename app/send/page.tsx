@@ -6,18 +6,12 @@ import Link from 'next/link';
 export default function SendMessage() {
     const [status, setStatus] = useState('');
     const [error, setError] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('+90534224278@s.whatsapp.net');
+    const [phoneNumber, setPhoneNumber] = useState('+905340224278@s.whatsapp.net');
     const [message, setMessage] = useState('halo from web api');
-    const [clientID, setClientID] = useState<string | null>(null);
-
-    useEffect(() => {
-        const storedClientID = localStorage.getItem('clientID');
-        setClientID(storedClientID);
-    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const clientID = localStorage.getItem('clientID');
+        const sessionID = localStorage.getItem('sessionID');
         try {
             const response = await fetch('http://localhost:8080/send', {
                 method: 'POST',
@@ -27,7 +21,7 @@ export default function SendMessage() {
                 body: JSON.stringify({
                     "Recipient": phoneNumber,
                     "Message": message,
-                    "ClientID": clientID,
+                    "SessionID": sessionID,
                 }),
             });
 
