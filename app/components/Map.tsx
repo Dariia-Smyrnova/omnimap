@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useState } from 'react';
-import { env } from '../env';
+import { env } from '../../env';
 import { APIProvider, Map, MapEvent, Marker } from '@vis.gl/react-google-maps';
 import { useAtom } from 'jotai';
 import { mapLinksAtom } from './MapLinks'; // Make sure to export mapLinksAtom from MapLinks.tsx
+import { Button } from '@/components/ui/button';
 
 export function GoogleMap() {
     const [mapLinks, setMapLinks] = useAtom(mapLinksAtom);
@@ -30,7 +31,7 @@ export function GoogleMap() {
             >
 
             </Map>
-            <button onClick={addCurrentLocation}>Add Current Location to List</button>
+            <Button onClick={addCurrentLocation}>Add Current Location to List</Button>
         </APIProvider>
     );
 }

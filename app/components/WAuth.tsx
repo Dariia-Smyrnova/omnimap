@@ -4,7 +4,6 @@ import Image from 'next/image';
 const WhatsAppAuth: React.FC = () => {
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [qrCode, setQrCode] = useState<string | null>(null);
-    const [registrationID, setRegistrationID] = useState<number | null>(null);
     const [authStatus, setAuthStatus] = useState<string>('pending');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);

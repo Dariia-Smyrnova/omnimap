@@ -36,6 +36,28 @@ export default function SendMessage() {
         }
     };
 
+    const handleContacts = async (e) => {
+        const sessionID = localStorage.getItem('sessionID');
+        try {
+            const response = await fetch('http://localhost:8080/contacts?sessionID=' + sessionID, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get contacts');
+            }
+            const result = await response.json();
+            console.log(result);
+            console.log(response);
+            setStatus(`Contacts: ${result.contacts}`);
+        } catch (error) {
+            setError(error.message);
+        }
+    };  
+
     return (
         <div>
             <h1>Send WhatsApp Message</h1>
@@ -66,6 +88,11 @@ export default function SendMessage() {
                 </div>
                 <button type="submit">Send</button>
             </form>
+
+            <form onSubmit={handleContacts}>
+                <button type="submit">Get Contacts</button>
+            </form>
+            
         </div>
     );
 }

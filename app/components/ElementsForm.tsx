@@ -72,7 +72,6 @@ function CheckoutForm(): JSX.Element {
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     try {
-      e.preventDefault();
       // Abort if form isn't valid
       if (!e.currentTarget.reportValidity()) return;
       if (!elements || !stripe) return;

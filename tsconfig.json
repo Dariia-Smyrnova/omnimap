@@ -17,11 +17,7 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/actions/*": ["app/actions/*"],
-      "@/components/*": ["app/components/*"],
-      "@/config": ["config/"],
-      "@/lib/*": ["lib/*"],
-      "@/utils/*": ["utils/*"]
+      "@/*": ["./*"],
     },
     "plugins": [
       {
