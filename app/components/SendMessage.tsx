@@ -1,6 +1,6 @@
 // dev/omnimap/app/qr/send-message.tsx
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function SendMessage() {
@@ -9,7 +9,7 @@ export default function SendMessage() {
     const [phoneNumber, setPhoneNumber] = useState('+905340224278@s.whatsapp.net');
     const [message, setMessage] = useState('halo from web api');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async () => {
         const sessionID = localStorage.getItem('sessionID');
         try {
             const response = await fetch('http://localhost:8080/send', {
@@ -32,11 +32,15 @@ export default function SendMessage() {
             setPhoneNumber('');
             setMessage('');
         } catch (error) {
-            setError(error.message);
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('An unknown error occurred');
+            }
         }
     };
 
-    const handleContacts = async (e) => {
+    const handleContacts = async () => {
         const sessionID = localStorage.getItem('sessionID');
         try {
             const response = await fetch('http://localhost:8080/contacts?sessionID=' + sessionID, {
@@ -54,9 +58,13 @@ export default function SendMessage() {
             console.log(response);
             setStatus(`Contacts: ${result.contacts}`);
         } catch (error) {
-            setError(error.message);
+            if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('An unknown error occurred');
+            }
         }
-    };  
+    };
 
     return (
         <div>
@@ -92,7 +100,7 @@ export default function SendMessage() {
             <form onSubmit={handleContacts}>
                 <button type="submit">Get Contacts</button>
             </form>
-            
+
         </div>
     );
 }

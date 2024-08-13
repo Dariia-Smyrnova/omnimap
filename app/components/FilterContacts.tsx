@@ -14,60 +14,9 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
+import { placesTypes } from "../data/Places";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// const fetchPlaces = async (
-//     query: string,
-//     location: string,
-//     radius: number,
-//     placeType: string,
-//     apiKey: string
-// ): Promise<any[]> => {
-//     const baseUrl = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
-//     const initialParams = new URLSearchParams({
-//         query,
-//         location,
-//         radius: radius.toString(),
-//         type: placeType,
-//         key: apiKey,
-//     });
-
-//     let textSearchResults: any[] = [];
-//     let nextPageToken: string | undefined;
-
-//     do {
-//         const params = new URLSearchParams(initialParams);
-//         if (nextPageToken) {
-//             params.append('pagetoken', nextPageToken);
-//         }
-
-//         const url = `${baseUrl}?${params.toString()}`;
-//         console.log(`Calling Google Places API with endpoint: ${url}`);
-
-//         try {
-//             const response = await fetch(url);
-//             if (!response.ok) {
-//                 throw new Error(`HTTP error! status: ${response.status}`);
-//             }
-//             const results: PlacesApiResponse = await response.json();
-
-//             console.log(`Results fetched: ${results.results.length} places found.`);
-//             textSearchResults.push(...results.results);
-
-//             nextPageToken = results.next_page_token;
-
-//             if (nextPageToken) {
-//                 // Google requires a short delay between requests when using a page token
-//                 await new Promise(resolve => setTimeout(resolve, 2000));
-//             }
-//         } catch (error) {
-//             console.error('Error fetching places:', error);
-//             break;
-//         }
-//     } while (nextPageToken);
-
-//     console.log(`Total places fetched: ${textSearchResults.length}`);
-//     return textSearchResults;
-// };
 
 
 const fetchPlaces = (query: string, location: string, radius: number, placeType: string) => {
@@ -113,7 +62,13 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
         },
     });
 
-    const onSubmit = async (e: React.FormEvent) => {
+    interface FilterFormData {
+        query: string;
+        radius: number;
+        placeType: string;
+    }
+
+    const onSubmit = async (data: FilterFormData) => {
         try {
             for (const location of locations) {
                 const results = await fetchPlaces(query, location, radius, placeType);
@@ -126,7 +81,6 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
     };
 
     const totalPages = Math.ceil(places.length / placesPerPage);
-
 
     return (
         <section className="flex flex-col items-center justify-center w-full py-8">
@@ -168,9 +122,20 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Place Type</FormLabel>
-                                <FormControl>
-                                    <Input type="text" placeholder="Enter place type" {...field} />
-                                </FormControl>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a place type" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {placesTypes.map((type) => (
+                                            <SelectItem key={type} value={type}>
+                                                {type}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 <FormDescription>Specify the type of place you're looking for</FormDescription>
                                 <FormMessage />
                             </FormItem>
@@ -196,7 +161,6 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                             <PaginationItem>
                                 <PaginationPrevious
                                     onClick={() => paginate(currentPage - 1)}
-                                    disabled={currentPage === 1}
                                 />
                             </PaginationItem>
                             {Array.from({ length: totalPages }, (_, i) => (
@@ -212,7 +176,6 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                             <PaginationItem>
                                 <PaginationNext
                                     onClick={() => paginate(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
                                 />
                             </PaginationItem>
                         </PaginationContent>

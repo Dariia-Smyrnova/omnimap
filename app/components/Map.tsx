@@ -29,7 +29,6 @@ export function GoogleMap() {
                     setPosition(center!);
                 }}
             >
-
             </Map>
             <Button onClick={addCurrentLocation}>Add Current Location to List</Button>
         </APIProvider>

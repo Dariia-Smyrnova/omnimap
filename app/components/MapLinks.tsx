@@ -153,7 +153,7 @@ export const MapLinksApp = () => {
                 <AddMapLink />
                
 
-            <FilterContacts locations={getLocations(mapLinks)} />
+            <FilterContacts locations={getLocations(mapLinks) as string[]} />
         </div>
     );
 };
