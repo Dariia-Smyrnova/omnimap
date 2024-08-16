@@ -4,29 +4,32 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import WhatsAppAuth from '../components/WAuth';
-import { useEffect, useState } from 'react';
-import SendMessage from '../components/SendMessage';
-
+import { useEffect } from 'react';
+import { atom, useAtom } from 'jotai'
+export const sessionIdAtom = atom<string | null>(null)
 
 const Home: NextPage = () => {
-    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [sessionId, setSessionId] = useAtom(sessionIdAtom);
+
     useEffect(() => {
         const storedSessionId = localStorage.getItem('sessionID');
-        setSessionId(storedSessionId);
-    }, []);
+        if (storedSessionId) {
+            setSessionId(storedSessionId);
+        }
+    }, [setSessionId]);
+    
     return (
-        <div>
+        <>
             <Head>
                 <title>WhatsApp Authentication</title>
                 <meta name="description" content="WhatsApp Authentication using QR Code" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <main>
+            <main className="flex flex-col items-center justify-center w-full">
                 {!sessionId && <WhatsAppAuth />}
-                {sessionId && <SendMessage />}
             </main>
-        </div>
+        </>
     );
 };
 

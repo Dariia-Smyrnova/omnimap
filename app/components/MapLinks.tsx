@@ -1,11 +1,12 @@
 "use client";
-import FilterContacts from './FilterContacts';
+import FilterContacts, { placesAtom } from './FilterContacts';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input" // Assuming you have an Input component
 import { Button } from "@/components/ui/button" // Assuming you have a Button component
 import { useForm } from 'react-hook-form';
+import SendMessage from './SendMessage';
 
 
 // Interface for Google Places API response
@@ -90,28 +91,28 @@ const AddMapLink = () => {
 
     return (
         <section className="flex flex-col items-center justify-center w-full py-8">
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-                <FormField
-                    control={form.control}
-                    name="url"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Google Maps URL</FormLabel>
-                            <FormControl>
-                                <Input placeholder="https://maps.google.com/..." {...field} />
-                            </FormControl>
-                            <FormDescription>
-                                Enter a valid Google Maps URL to add to your list.
-                            </FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <Button type="submit">Add Map Link</Button>
-                <ClearLinks />
-            </form>
-        </Form>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
+                    <FormField
+                        control={form.control}
+                        name="url"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Google Maps URL</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="https://maps.google.com/..." {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                    Enter a valid Google Maps URL to add to your list.
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <Button type="submit">Add Map Link</Button>
+                    <ClearLinks />
+                </form>
+            </Form>
         </section>
     );
 };
@@ -143,17 +144,16 @@ const ClearLinks = () => {
 };
 
 
-
 // Main component that combines all the parts
 export const MapLinksApp = () => {
     const [mapLinks] = useAtom(mapLinksAtom);
+    const [places] = useAtom(placesAtom);
     return (
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center w-1/2 lg:w-1/3 mx-auto">
             <MapLinksList />
-                <AddMapLink />
-               
-
+            <AddMapLink />
             <FilterContacts locations={getLocations(mapLinks) as string[]} />
+            {places.length > 0 && <SendMessage />}
         </div>
     );
 };

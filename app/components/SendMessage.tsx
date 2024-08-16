@@ -1,36 +1,52 @@
 // dev/omnimap/app/qr/send-message.tsx
 "use client";
 import { useState } from 'react';
-import Link from 'next/link';
+import {
+    Form,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormControl,
+    FormMessage,
+} from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Textarea } from "@/components/ui/textarea"
+import { useAtom } from 'jotai';
+import { placesAtom } from './FilterContacts';
+
+interface FormData {
+    message: string;
+}
 
 export default function SendMessage() {
     const [status, setStatus] = useState('');
     const [error, setError] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('+905340224278@s.whatsapp.net');
-    const [message, setMessage] = useState('halo from web api');
+    const [places] = useAtom(placesAtom);
+    const form = useForm<FormData>();
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (data: FormData) => {
         const sessionID = localStorage.getItem('sessionID');
         try {
-            const response = await fetch('http://localhost:8080/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    "Recipient": phoneNumber,
-                    "Message": message,
-                    "SessionID": sessionID,
-                }),
-            });
+            for (const p of places) {
+                const response = await fetch('http://localhost:8080/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "Recipient": p.international_phone_number,
+                        "Message": data.message,
+                        "SessionID": sessionID,
+                    }),
+                });
 
-            if (!response.ok) {
-                throw new Error('Failed to send message');
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                const result = await response.json();
+                setStatus(`Message sent: ${result.message}`);
             }
-            const result = await response.json();
-            setStatus(`Message sent: ${result.message}`);
-            setPhoneNumber('');
-            setMessage('');
         } catch (error) {
             if (error instanceof Error) {
                 setError(error.message);
@@ -67,38 +83,33 @@ export default function SendMessage() {
     };
 
     return (
-        <div>
-            <h1>Send WhatsApp Message</h1>
-            <Link href="/qr">Back to QR Scanner</Link>
+        <div className='flex flex-col items-center justify-center w-full'>
+            <h3 className="text-2xl font-bold mb-4">Send WhatsApp Message</h3>
 
             {status && <p>Status: {status}</p>}
             {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="phoneNumber">Phone Number:</label>
-                    <input
-                        type="text"
-                        id="phoneNumber"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        required
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 w-full">
+                    <FormField
+                        control={form.control}
+                        name="message"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel htmlFor="message">Message:</FormLabel>
+                                <FormControl>
+                                    <Textarea {...field} id="message" required />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                </div>
-                <div>
-                    <label htmlFor="message">Message:</label>
-                    <textarea
-                        id="message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        required
-                    ></textarea>
-                </div>
-                <button type="submit">Send</button>
-            </form>
+                    <Button type="submit">Send to {places.length} contacts</Button>
+                </form>
+            </Form>
 
-            <form onSubmit={handleContacts}>
-                <button type="submit">Get Contacts</button>
+            <form onSubmit={handleContacts} className='flex flex-col items-left justify-left w-full my-8'>
+                <Button type="submit">Get Contacts</Button>
             </form>
 
         </div>

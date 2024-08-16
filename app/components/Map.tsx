@@ -20,6 +20,7 @@ export function GoogleMap() {
     return (
         <APIProvider apiKey={env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
             <Map
+            style={{width: '600px', height: '400px'}}
                 defaultCenter={position}
                 defaultZoom={10}
                 

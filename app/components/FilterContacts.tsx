@@ -16,37 +16,94 @@ import {
 } from "@/components/ui/pagination"
 import { placesTypes } from "../data/Places";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { atom, useAtom } from 'jotai';
+import { Loader2 } from "lucide-react";
 
+export const placesAtom = atom<EnrichedPlace[]>([]);
 
+interface EnrichedPlace extends google.maps.places.PlaceResult {
+    formatted_phone_number?: string;
+    international_phone_number?: string;
+    website?: string;
+}
 
-const fetchPlaces = (query: string, location: string, radius: number, placeType: string) => {
-    return new Promise((resolve, reject) => {
-        const service = new google.maps.places.PlacesService(document.createElement('div'));
-
-        const [lat, lng] = location.split(',').map(Number);
-        const request = {
-            query: query,
-            location: new google.maps.LatLng(lat, lng),
-            radius: radius,
-            type: placeType
-        };
-
-        service.textSearch(request, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                resolve(results);
-            } else {
-                reject(new Error(`Places search failed: ${status}`));
-            }
-        });
+const enrichPlace = (place: google.maps.places.PlaceResult): Promise<EnrichedPlace> => {
+    return new Promise((resolve) => {
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+  
+      const request: google.maps.places.PlaceDetailsRequest = {
+        placeId: place.place_id as string,
+        fields: ['name', 'formatted_phone_number', 'international_phone_number', 'website']
+      };
+  
+      service.getDetails(request, (details, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && details) {
+          resolve({
+            ...place,
+            formatted_phone_number: details.formatted_phone_number,
+            international_phone_number: details.international_phone_number ? details.international_phone_number.replace(/\s/g, '') : undefined,
+            website: details.website
+          });
+        } else {
+          resolve(place as EnrichedPlace);
+        }
+      });
     });
+  };
+  
+const fetchPlaces = async (query: string, location: string, radius: number, placeType: string, total: number): Promise<EnrichedPlace[]> => {
+    let allResults: EnrichedPlace[] = [];
+    console.log('fetching places');
+    const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+    const [lat, lng] = location.split(',').map(Number);
+
+    let request: google.maps.places.TextSearchRequest = {
+        query: query,
+        location: new google.maps.LatLng(lat, lng),
+        radius: radius,
+        type: placeType,
+    };
+
+    let isFinished = false;
+
+    function callback(
+        results: google.maps.places.PlaceResult[] | null,
+        status: google.maps.places.PlacesServiceStatus,
+        pagination: google.maps.places.PlaceSearchPagination | null
+    ) {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            console.log('enriching results: ', results);
+            Promise.all(results.map(result => enrichPlace(result)))
+                .then(enrichedResults => {
+                    allResults = allResults.concat(enrichedResults);
+                    if (pagination && pagination.hasNextPage) {
+                        setTimeout(() => {
+                            console.log('fetching next page');
+                            pagination.nextPage();
+                        }, 2000); // Wait for 2 seconds before next request
+                    } else {
+                        isFinished = true;
+                    }
+                });
+        } else {
+            console.log(new Error(`Places search failed: ${status}`));
+            isFinished = true;
+        }
+    }
+
+    service.textSearch(request, callback);
+    while (!isFinished) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    return allResults;
 };
 
 export default function FilterContacts({ locations }: { locations: string[] }) {
-    const [query, setQuery] = useState('');
-    const [radius, setRadius] = useState(5);
-    const [placeType, setPlaceType] = useState('roofing_contractor');
-    const [places, setPlaces] = useState<any[]>([]);
+    const [places, setPlaces] = useAtom(placesAtom);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
     const placesPerPage = 10;
     const indexOfLastPlace = currentPage * placesPerPage;
     const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
@@ -57,7 +114,7 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
     const form = useForm({
         defaultValues: {
             query: "",
-            radius: 1000,
+            radius: 30000,
             placeType: "",
         },
     });
@@ -69,14 +126,17 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
     }
 
     const onSubmit = async (data: FilterFormData) => {
+        setIsLoading(true);
         try {
             for (const location of locations) {
-                const results = await fetchPlaces(query, location, radius, placeType);
+                const results = await fetchPlaces(data.query, location, data.radius, data.placeType, 100);
                 setPlaces(prevPlaces => [...prevPlaces, ...results as any[]]);
                 setCurrentPage(1);
             }
         } catch (error) {
             console.error('Error fetching places:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -122,7 +182,7 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Place Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} required>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select a place type" />
@@ -141,8 +201,16 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                             </FormItem>
                         )}
                     />
-
-                    <Button type="submit">Fetch Places</Button>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Fetching Places...
+                            </>
+                        ) : (
+                            'Fetch Places'
+                        )}
+                    </Button>
                 </form>
             </Form>
 
@@ -150,11 +218,24 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                 <div className="flex flex-col items-left justify-left w-full py-8">
                     <h3 className="text-2xl font-bold mb-4">Places</h3>
                     <ul className="divide-y divide-gray-200">
-                        {currentPlaces.map((place, index) => (
-                            <li key={index} className="flex items-center justify-between py-3">
-                                {place.name} - {place.vicinity}
-                            </li>
-                        ))}
+                        {currentPlaces
+                            // .filter(place => place.international_phone_number)
+                            .map((place, index) => (
+                                <li key={index} className="flex items-center justify-between py-3">
+                                    <span>{place.name} - {place.international_phone_number}</span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            const newPlaces = [...places];
+                                            newPlaces.splice(indexOfFirstPlace + index, 1);
+                                            setPlaces(newPlaces);
+                                        }}
+                                    >
+                                        ×
+                                    </Button>
+                                </li>
+                            ))}
                     </ul>
                     <Pagination>
                         <PaginationContent>
