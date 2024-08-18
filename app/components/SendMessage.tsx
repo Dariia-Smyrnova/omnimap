@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from "@/components/ui/textarea"
 import { useAtom } from 'jotai';
 import { placesAtom } from './FilterContacts';
+import { env } from '@/env';
 
 interface FormData {
     message: string;
@@ -29,7 +30,7 @@ export default function SendMessage() {
         const sessionID = localStorage.getItem('sessionID');
         try {
             for (const p of places) {
-                const response = await fetch('http://localhost:8080/send', {
+                const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/send`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -59,7 +60,7 @@ export default function SendMessage() {
     const handleContacts = async () => {
         const sessionID = localStorage.getItem('sessionID');
         try {
-            const response = await fetch('http://localhost:8080/contacts?sessionID=' + sessionID, {
+            const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/contacts?sessionID=${sessionID}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

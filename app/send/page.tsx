@@ -2,6 +2,8 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { env } from '@/env';
+
 
 export default function SendMessage() {
     const [status, setStatus] = useState('');
@@ -12,7 +14,7 @@ export default function SendMessage() {
     const handleSubmit = async () => {
         const sessionID = localStorage.getItem('sessionID');
         try {
-            const response = await fetch('http://localhost:8080/send', {
+            const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/send`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

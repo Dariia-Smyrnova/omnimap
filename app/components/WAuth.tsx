@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { env } from '@/env';
 
 const WhatsAppAuth: React.FC = () => {
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -10,7 +11,7 @@ const WhatsAppAuth: React.FC = () => {
 
     useEffect(() => {
         if (sessionId) {
-            const eventSource = new EventSource(`http://localhost:8080/auth-status?sessionID=${sessionId}`);
+            const eventSource = new EventSource(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/auth-status?sessionID=${sessionId}`);
 
             eventSource.onmessage = (event) => {
                 const status = event.data;
@@ -39,7 +40,7 @@ const WhatsAppAuth: React.FC = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch('http://localhost:8080/generate-qr', { method: 'GET' });
+            const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/generate-qr`, { method: 'GET' });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
