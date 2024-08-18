@@ -6,7 +6,8 @@ import Head from 'next/head';
 import WhatsAppAuth from '../components/WAuth';
 import { useEffect } from 'react';
 import { atom, useAtom } from 'jotai'
-export const sessionIdAtom = atom<string | null>(null)
+
+const sessionIdAtom = atom<string | null>(null);
 
 const Home: NextPage = () => {
     const [sessionId, setSessionId] = useAtom(sessionIdAtom);
