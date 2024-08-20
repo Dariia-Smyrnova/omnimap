@@ -29,28 +29,29 @@ interface EnrichedPlace extends google.maps.places.PlaceResult {
 
 const enrichPlace = (place: google.maps.places.PlaceResult): Promise<EnrichedPlace> => {
     return new Promise((resolve) => {
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-  
-      const request: google.maps.places.PlaceDetailsRequest = {
-        placeId: place.place_id as string,
-        fields: ['name', 'formatted_phone_number', 'international_phone_number', 'website']
-      };
-  
-      service.getDetails(request, (details, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && details) {
-          resolve({
-            ...place,
-            formatted_phone_number: details.formatted_phone_number,
-            international_phone_number: details.international_phone_number ? details.international_phone_number.replace(/\s/g, '') : undefined,
-            website: details.website
-          });
-        } else {
-          resolve(place as EnrichedPlace);
-        }
-      });
+        const service = new google.maps.places.PlacesService(document.createElement('div'));
+
+        const request: google.maps.places.PlaceDetailsRequest = {
+            placeId: place.place_id as string,
+            fields: ['name', 'formatted_phone_number', 'international_phone_number', 'website']
+        };
+
+        service.getDetails(request, (details, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && details) {
+                resolve({
+                    ...place,
+                    formatted_phone_number: details.formatted_phone_number,
+                    international_phone_number: details.international_phone_number ? details.international_phone_number.replace(/\s/g, '') : undefined,
+                    website: details.website
+                });
+            } else {
+                resolve(place as EnrichedPlace);
+            }
+        });
     });
-  };
-  
+};
+
+
 const fetchPlaces = async (query: string, location: string, radius: number, placeType: string, total: number): Promise<EnrichedPlace[]> => {
     let allResults: EnrichedPlace[] = [];
     console.log('fetching places');
@@ -73,19 +74,16 @@ const fetchPlaces = async (query: string, location: string, radius: number, plac
         pagination: google.maps.places.PlaceSearchPagination | null
     ) {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            console.log('enriching results: ', results);
-            Promise.all(results.map(result => enrichPlace(result)))
-                .then(enrichedResults => {
-                    allResults = allResults.concat(enrichedResults);
-                    if (pagination && pagination.hasNextPage) {
-                        setTimeout(() => {
-                            console.log('fetching next page');
-                            pagination.nextPage();
-                        }, 2000); // Wait for 2 seconds before next request
-                    } else {
-                        isFinished = true;
-                    }
-                });
+            console.log('received results: ', results);
+            allResults = allResults.concat(results as EnrichedPlace[]);
+            if (pagination && pagination.hasNextPage) {
+                setTimeout(() => {
+                    console.log('fetching next page');
+                    pagination.nextPage();
+                }, 2000); // Wait for 2 seconds before next request
+            } else {
+                isFinished = true;
+            }
         } else {
             console.log(new Error(`Places search failed: ${status}`));
             isFinished = true;
@@ -97,6 +95,8 @@ const fetchPlaces = async (query: string, location: string, radius: number, plac
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
+    // Perform enrichment after all results are collected
+    // const enrichedResults = await Promise.all(allResults.map(result => enrichPlace(result)));
     return allResults;
 };
 
@@ -108,6 +108,18 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
     const indexOfLastPlace = currentPage * placesPerPage;
     const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
     const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
+
+    const enrichCurrentPlaces = async () => {
+        setIsLoading(true);
+        try {
+            const enrichedPlaces = await Promise.all(places.map(place => enrichPlace(place)));
+            setPlaces(enrichedPlaces);
+        } catch (error) {
+            console.error('Error enriching places:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
@@ -218,11 +230,22 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                 <div className="flex flex-col items-left justify-left w-full py-8">
                     <h3 className="text-2xl font-bold mb-4">Places</h3>
                     <ul className="divide-y divide-gray-200">
+
                         {currentPlaces
                             // .filter(place => place.international_phone_number)
                             .map((place, index) => (
                                 <li key={index} className="flex items-center justify-between py-3">
-                                    <span>{place.name} - {place.international_phone_number}</span>
+                                    <div>
+                                        <span className="font-bold">{place.name}</span>
+                                        {place.formatted_phone_number && (
+                                            <span className="ml-2">{place.formatted_phone_number}</span>
+                                        )}
+                                        {place.website && (
+                                            <a href={place.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-500">
+                                                Website
+                                            </a>
+                                        )}
+                                    </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -237,6 +260,20 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                                 </li>
                             ))}
                     </ul>
+                    <Button
+                        onClick={enrichCurrentPlaces}
+                        disabled={isLoading}
+                        className="mt-4"
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Enriching Results...
+                            </>
+                        ) : (
+                            'Enrich Results'
+                        )}
+                    </Button>
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
