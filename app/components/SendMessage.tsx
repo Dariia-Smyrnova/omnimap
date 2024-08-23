@@ -41,9 +41,8 @@ export default function SendMessage() {
                         "SessionID": sessionID,
                     }),
                 });
-
                 if (!response.ok) {
-                    throw new Error('Failed to send message');
+                    throw new Error('Failed to send message: ' + response);
                 }
                 const result = await response.json();
                 setStatus(`Message sent: ${result.message}`);

@@ -135,22 +135,55 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
         query: string;
         radius: number;
         placeType: string;
+        amount: number;
     }
 
     const onSubmit = async (data: FilterFormData) => {
-        setIsLoading(true);
-        try {
-            for (const location of locations) {
-                const results = await fetchPlaces(data.query, location, data.radius, data.placeType, 100);
-                setPlaces(prevPlaces => [...prevPlaces, ...results as any[]]);
-                setCurrentPage(1);
+        if (locations.length === 0) {
+            alert("Please add Google Map links to retrieve data from.");
+        } else {
+            setIsLoading(true);
+            try {
+                for (const location of locations) {
+                    const results = await fetchPlaces(data.query, location, data.radius, data.placeType, data.amount);
+                    setPlaces(prevPlaces => [...prevPlaces, ...results as any[]]);
+                    setCurrentPage(1);
+                }
+            } catch (error) {
+                console.error('Error fetching places:', error);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error('Error fetching places:', error);
-        } finally {
-            setIsLoading(false);
         }
     };
+    // const fetchButton = document.getElementById('fetchButton');
+    // fetchButton.addEventListener('click', handleButtonClick);
+
+    // function handleButtonClick(event) {
+    //     if (locations.length === 0) {
+    //       event.preventDefault();
+    //       showPopup("Please add Google Map links to retrieve data from.");
+    //     } else {
+    //       // Your existing button click logic here
+    //     }
+    //   }
+
+    //   function showPopup(message) {
+    //     // You can use a library like SweetAlert2 or create your own popup
+    //     // Here's a simple example using the built-in alert function
+    //     alert(message);
+
+    //     // If you want a more stylish popup, you could create a custom one:
+    //     /*
+    //     const popup = document.createElement('div');
+    //     popup.classList.add('popup');
+    //     popup.textContent = message;
+    //     document.body.appendChild(popup);
+    //     setTimeout(() => {
+    //       popup.remove();
+    //     }, 3000); // Remove after 3 seconds
+    //     */
+    //   }
 
     const totalPages = Math.ceil(places.length / placesPerPage);
 
@@ -213,7 +246,24 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
                             </FormItem>
                         )}
                     />
-                    <Button type="submit" disabled={isLoading}>
+
+                    <FormField
+                        control={form.control}
+                        name="amount"
+                        defaultValue={100}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                    <Input type="number" {...field} />
+                                </FormControl>
+                                <FormDescription>Specify the amount (default is 100)</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <Button type="submit" disabled={isLoading} id="fetchButton">
                         {isLoading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

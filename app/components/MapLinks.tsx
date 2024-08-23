@@ -90,27 +90,29 @@ const AddMapLink = () => {
     };
 
     return (
-        <section className="flex flex-col items-center justify-center w-full py-8">
+        <section className="flex flex-col items-center justify-center w-full pb-8">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
+                <div className="flex flex-row justify-between items-center w-[600px] overflow-hidden  px-4">
                     <FormField
+                    className="w-9/12" 
                         control={form.control}
                         name="url"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Google Maps URL</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="https://maps.google.com/..." {...field} />
+                                    <Input placeholder="https://maps.google.com/..." {...field} className="w-9/12" />
                                 </FormControl>
-                                <FormDescription>
+                                {/* <FormDescription>
                                     Enter a valid Google Maps URL to add to your list.
-                                </FormDescription>
+                                </FormDescription> */}
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    <Button type="submit">Add Map Link</Button>
-                    <ClearLinks />
+                    <Button type="submit">Add Map URL</Button>
+                    </div>
+                 
                 </form>
             </Form>
         </section>
@@ -149,9 +151,9 @@ export const MapLinksApp = () => {
     const [mapLinks] = useAtom(mapLinksAtom);
     const [places] = useAtom(placesAtom);
     return (
-        <div className="flex flex-col items-center justify-center w-1/2 lg:w-1/3 mx-auto">
-            <MapLinksList />
+        <div className="flex flex-col items-center justify-center">
             <AddMapLink />
+            <MapLinksList />
             <FilterContacts locations={getLocations(mapLinks) as string[]} />
             {places.length > 0 && <SendMessage />}
         </div>

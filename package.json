@@ -10,6 +10,7 @@
     "@emotion/styled": "^11.13.0",
     "@googlemaps/js-api-loader": "^1.16.6",
     "@hookform/resolvers": "^3.9.0",
+    "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-select": "^2.1.1",
     "@radix-ui/react-slot": "^1.1.0",
@@ -35,7 +36,7 @@
   },
   "devDependencies": {
     "@types/node": "20.4.6",
-    "@types/react": "18.2.8",
+    "@types/react": "^18.2.8",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.9",
