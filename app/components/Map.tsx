@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export function GoogleMap({
     appendLink,
 }: {
-    appendLink: (link: string) => void;
+    appendLink: (params: {link: string, lat: number, lng: number}) => void;
 }) {
     const [position, setPosition] = useState<google.maps.LatLngLiteral>({
         lat: 53.54992,
@@ -16,7 +16,7 @@ export function GoogleMap({
 
     const addCurrentLocation = useCallback(() => {
         console.log(position);
-        appendLink(`https://www.google.com/maps?q=${position.lat},${position.lng}`);
+        appendLink({ link: `https://www.google.com/maps?q=${position.lat},${position.lng}`, lat: position.lat, lng: position.lng });
     }, [position.lat, position.lng, appendLink]);
 
     const handleMapChange = (event: MapEvent) => {
