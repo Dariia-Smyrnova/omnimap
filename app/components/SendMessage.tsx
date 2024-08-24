@@ -28,9 +28,6 @@ export default function SendMessage() {
     const form = useForm<FormData>();
     const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
 
-    useEffect(() => {
-        validateSessionID();
-    }, []);
 
     const validateSessionID = async () => {
         const sessionID = localStorage.getItem('sessionID');
