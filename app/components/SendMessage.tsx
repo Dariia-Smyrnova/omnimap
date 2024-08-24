@@ -62,10 +62,10 @@ export default function SendMessage() {
     };
 
     const sendMessage = async (data: FormData) => {
-        if (!isSessionValid) {
-            setError('Invalid session. Please log in again.');
-            return;
-        }
+        // if (!isSessionValid) {
+        //     setError('Invalid session. Please log in again.');
+        //     return;
+        // }
         const sessionID = localStorage.getItem('sessionID');
         try {
             for (const p of places) {
