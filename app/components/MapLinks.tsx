@@ -1,5 +1,5 @@
 "use client";
-import FilterContacts, { placesAtom } from "./FilterContacts";
+import PlacesList, { placesAtom } from "./PlacesList";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import {
@@ -453,8 +453,8 @@ export const MapLinksApp = () => {
         </form>
       </Form>
       {stage === 1 && (
-        <div>
-          <FilterContacts locations={getLocations(mapLinks) as string[]} />
+        <div className="w-full">
+          <PlacesList  />
           {places.length > 0 && <SendMessage />}
         </div>
       )}

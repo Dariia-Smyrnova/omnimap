@@ -1,18 +1,7 @@
 // Function to call the Google Places API
 
 import React, { useState } from "react";
-import { useFormContext } from "react-hook-form";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input"; // Assuming you have an Input component
-import { Button } from "@/components/ui/button"; // Assuming you have a Button component
-import { env } from "../../env";
+import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
@@ -21,26 +10,19 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { placesTypes } from "../data/Places";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { atom, useAtom } from "jotai";
 import { Loader2 } from "lucide-react";
-import { SearchFormData } from "./MapLinks";
 import { EnrichedPlace, enrichPlace } from "./Enrichment";
 
 export const placesAtom = atom<EnrichedPlace[]>([]);
 export const currentPageAtom = atom(1);
+export const enrichAtom = atom(false);
 
-export default function FilterContacts({ locations }: { locations: string[] }) {
+export default function PlacesList() {
   const [places, setPlaces] = useAtom(placesAtom);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEnriched, setIsEnriched] = useAtom(enrichAtom);
   const placesPerPage = 10;
   const indexOfLastPlace = currentPage * placesPerPage;
   const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
@@ -53,6 +35,7 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
         places.map((place) => enrichPlace(place))
       );
       setPlaces(enrichedPlaces);
+      setIsEnriched(true)
     } catch (error) {
       console.error("Error enriching places:", error);
     } finally {
@@ -61,15 +44,6 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
   };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  const form = useFormContext<SearchFormData>();
-
-  interface FilterFormData {
-    query: string;
-    radius: number;
-    placeType: string;
-    amount: number;
-  }
-
   const totalPages = Math.ceil(places.length / placesPerPage);
 
   return (
@@ -79,7 +53,6 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
           <h3 className="text-2xl font-bold mb-4">Places</h3>
           <ul className="divide-y divide-gray-200">
             {currentPlaces
-              // .filter(place => place.international_phone_number)
               .map((place, index) => (
                 <li
                   key={index}
@@ -120,7 +93,7 @@ export default function FilterContacts({ locations }: { locations: string[] }) {
           <Button
             onClick={enrichCurrentPlaces}
             disabled={isLoading}
-            className="mt-4"
+            className="my-4"
           >
             {isLoading ? (
               <>
