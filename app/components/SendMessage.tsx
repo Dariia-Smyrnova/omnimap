@@ -16,6 +16,9 @@ import { useAtom } from 'jotai';
 import { enrichAtom, placesAtom } from './PlacesList';
 import { env } from '@/env';
 
+import { toast } from "sonner"
+
+
 interface FormData {
     message: string;
 }
@@ -38,7 +41,10 @@ export default function SendMessage() {
 
         try {
             const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/validate-session`, {
-                method: 'GET',
+                method: 'POST',
+                body: JSON.stringify({
+                    "SessionID": sessionID,
+                }),
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -48,7 +54,6 @@ export default function SendMessage() {
             if (!response.ok) {
                 throw new Error('Failed to validate session');
             }
-
             const result = await response.json();
             setIsSessionValid(result.isValid);
         } catch (error) {
@@ -66,28 +71,41 @@ export default function SendMessage() {
         const sessionID = localStorage.getItem('sessionID');
         try {
             for (const p of places) {
-                const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/send`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        "Recipient": p.international_phone_number,
-                        "Message": data.message,
-                        "SessionID": sessionID,
-                    }),
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to send message: ' + response);
+                
+                const send = async () => {
+                    const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/send`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            "Recipient": p.international_phone_number,
+                            "Message": data.message,
+                            "SessionID": sessionID,
+                        }),
+                    });
+                    
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to send message: ' + response);
+                    }
+                    return await response.json();
                 }
-                const result = await response.json();
-                setStatus(`Message sent: ${result.message}`);
+                await toast.promise(send(), {
+                    loading: `Sending message to ${p.name}` + p.international_phone_number,  
+                    success: 'Message sent!',
+                    error: 'Failed to send message!',
+                });
+                
+
+                // setStatus(`Message sent: ${result.message}`);
             }
         } catch (error) {
             if (error instanceof Error) {
-                setError(error.message);
+                console.log(error);
+                // setError(error.message);
             } else {
-                setError('An unknown error occurred');
+                console.log('An unknown error occurred');
             }
         }
     };
@@ -120,7 +138,7 @@ export default function SendMessage() {
 
     return (
         <>
-            {isEnriched && <div className='flex flex-col items-center justify-center w-full'>
+            {isEnriched && <div className='flex flex-col items-center justify-center w-full mb-12'>
                 <h3 className="text-2xl font-bold mb-4">Send WhatsApp Message</h3>
                 {status && <p>Status: {status}</p>}
                 {error && <p style={{ color: 'red' }}>Error: {error}</p>}

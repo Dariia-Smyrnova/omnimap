@@ -30,7 +30,7 @@ export default function SendMessage() {
                 throw new Error('Failed to send message');
             }
             const result = await response.json();
-            setStatus(`Message sent: ${result.message}`);
+            // setStatus(`Message sent: ${result.message}`);
             setPhoneNumber('');
             setMessage('');
         } catch (error) {

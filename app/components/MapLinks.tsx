@@ -117,10 +117,10 @@ const MapLinksList = () => {
         console.log(match);
         if (match && match.groups) {
             const { latitude, longitude, zoom } = match.groups;
-            prepend({ 
-                id: String(+new Date()), 
-                url, 
-                lat: Number(latitude), 
+            prepend({
+                id: String(+new Date()),
+                url,
+                lat: Number(latitude),
                 lng: Number(longitude),
                 // zoom: zoom ? zoom.replace('z', '') : null
             });
@@ -149,16 +149,16 @@ const MapLinksList = () => {
                 </Button>
             </div>
 
-            <ul className="divide-y divide-gray-200 w-full">
+            {fields.length > 0 && <ul className="divide-y divide-gray-200 w-full pt-6">
                 {fields.map((link, index) => (
-                    <li key={link.id} className="flex items-center justify-between py-3">
+                    <li key={link.id} className="flex items-center justify-between py-3 w-full max-w-3xl">
                         <FormField
                             control={form.control}
                             name={`mapLinks.${index}.url`}
                             render={({ field, fieldState }) => (
                                 <FormItem>
                                     <FormControl>
-                                        <span>{field.value}</span>
+                                        <span className="overflow truncate">{field.value}</span>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -172,7 +172,8 @@ const MapLinksList = () => {
                         </button>
                     </li>
                 ))}
-            </ul>
+            </ul>}
+            {fields.length === 0 && <p className="text-left text-md my-4 text-gray-500 pt-6">Add links to google maps locations to start searching.</p>}
             {form.formState.errors.mapLinks && (
                 <FormMessage>You must have at least one link.</FormMessage>
             )}
@@ -184,15 +185,16 @@ const SearchFilters = () => {
     const form = useFormContext<SearchFormData>();
 
     return (
-        <div className="space-y-4 w-full">
+        <div className="space-y-4 w-full mt-12 text-2xl">
+            <h2>Search Options</h2>
             <FormField
                 control={form.control}
                 name="query"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Search Query</FormLabel>
+                        <FormLabel>Query</FormLabel>
                         <FormControl>
-                            <Input type="text" placeholder="Enter search query" {...field} />
+                            <Input type="text" placeholder="Eg: Restaurant in Texas" {...field} />
                         </FormControl>
                         <FormDescription>
                             Enter your search query for places
@@ -325,7 +327,7 @@ const searchSchema = z.object({
     query: z.string(),
     radius: z.number().min(1).max(100000),
     placeType: z.string().min(1),
-    amount: z.number().min(20).max(100),
+    amount: z.number().min(20).max(1000),
 });
 
 export type SearchFormData = z.infer<typeof searchSchema>;
@@ -346,10 +348,6 @@ const fetchPlaces = async (
         document.createElement("div")
     );
 
-
-
-    //   const [lat, lng] = location.split(",").map(Number);
-
     let request: google.maps.places.TextSearchRequest = {
         query: query,
         location: new google.maps.LatLng(location.lat, location.lng),
@@ -367,7 +365,7 @@ const fetchPlaces = async (
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
             console.log("received results: ", results);
             allResults = allResults.concat(results as EnrichedPlace[]);
-            if (pagination && pagination.hasNextPage) {
+            if (pagination && pagination.hasNextPage && allResults.length < total) {
                 setTimeout(() => {
                     console.log("fetching next page");
                     pagination.nextPage();
@@ -399,7 +397,7 @@ export const MapLinksApp = () => {
             query: "",
             radius: 1000,
             placeType: "",
-            amount: 100,
+            amount: 20,
         },
         mode: "onSubmit",
         resolver: zodResolver(searchSchema),
@@ -448,8 +446,7 @@ export const MapLinksApp = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <MapLinksList />
                     <SearchFilters />
-
-                    <Button type="submit" disabled={isLoading} id="fetchButton">
+                    <Button type="submit" disabled={isLoading} id="fetchButton"className="my-6">
                         {isLoading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
