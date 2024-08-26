@@ -1,6 +1,6 @@
 "use client";
 import PlacesList, { placesAtom } from "./PlacesList";
-import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtom, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import {
     Form,
@@ -32,71 +32,12 @@ import { placesTypes } from "../data/Places";
 import { Loader2 } from "lucide-react";
 import { env } from "@/env";
 
-// Interface for Google Places API response
-interface PlacesApiResponse {
-    results: any[];
-    next_page_token?: string;
-}
-
-// Define the structure for a map link
 interface MapLink {
     url: string;
 }
 
-// Create an atom to store the list of map links
 export const mapLinksAtom = atomWithStorage<MapLink[]>("mapLinks", []);
 
-
-// Create a derived atom to calculate statistics
-const statsAtom = atom((get) => {
-    const links = get(mapLinksAtom);
-    return {
-        totalLinks: links.length,
-    };
-});
-
-const MapLinksItem = ({
-    link,
-    index,
-    remove,
-}: {
-    link: MapLink;
-    index: number;
-    remove: (index: number) => void;
-}) => {
-    const form = useFormContext<SearchFormData>();
-
-    return (
-        <li className="flex items-center justify-between py-3">
-            <FormField
-                control={form.control}
-                name={`mapLinks.${index}.url`}
-                render={({ field, fieldState }) => (
-                    <FormItem>
-                        <FormControl>
-                            <span>{field.value}</span>
-                        </FormControl>
-                        {/* <FormDescription>
-              Enter a valid Google Maps URL to add to your list.
-            </FormDescription> */}
-                        {fieldState.error && (
-                            <FormMessage>{fieldState.error.message}</FormMessage>
-                        )}
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <button
-                onClick={() => remove(index)}
-                className="text-red-500 hover:text-red-700 focus:outline-none"
-            >
-                🗑️
-            </button>
-        </li>
-    );
-};
-
-// Component to display the list of map links
 const MapLinksList = () => {
     const form = useFormContext<SearchFormData>();
 
@@ -284,18 +225,6 @@ const SearchFilters = () => {
     );
 };
 
-// Component to display statistics
-const Stats = () => {
-    const stats = useAtomValue(statsAtom);
-
-    return (
-        <div>
-            <p>Total links: {stats.totalLinks}</p>
-        </div>
-    );
-};
-
-// Component to clear all links
 const ClearLinks = () => {
     const [, setMapLinks] = useAtom(mapLinksAtom);
 
@@ -446,7 +375,7 @@ export const MapLinksApp = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <MapLinksList />
                     <SearchFilters />
-                    <Button type="submit" disabled={isLoading} id="fetchButton"className="my-6">
+                    <Button type="submit" disabled={isLoading} id="fetchButton" className="my-6">
                         {isLoading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

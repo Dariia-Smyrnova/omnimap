@@ -1,6 +1,6 @@
 // dev/omnimap/app/qr/send-message.tsx
 "use client";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
     Form,
     FormField,
@@ -18,6 +18,7 @@ import { env } from '@/env';
 
 import { toast } from "sonner"
 
+import { QRCodeDialog } from './QRCodeDialog';
 
 interface FormData {
     message: string;
@@ -30,15 +31,11 @@ export default function SendMessage() {
     const [isEnriched, setIsEnriched] = useAtom(enrichAtom);
     const form = useForm<FormData>();
     const [isSessionValid, setIsSessionValid] = useState<boolean | null>(null);
+    const [showQRDialog, setShowQRDialog] = useState(false);
 
 
     const validateSessionID = async () => {
-        const sessionID = localStorage.getItem('sessionID');
-        if (!sessionID) {
-            setIsSessionValid(false);
-            return;
-        }
-
+        const sessionID = localStorage.getItem('sessionID') as string;
         try {
             const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/validate-session`, {
                 method: 'POST',
@@ -50,28 +47,31 @@ export default function SendMessage() {
                 },
                 credentials: 'include',
             });
+            console.log("validated: " + response);
 
             if (!response.ok) {
-                throw new Error('Failed to validate session');
+                console.log('Failed to validate session: ' + response);
             }
             const result = await response.json();
             setIsSessionValid(result.isValid);
         } catch (error) {
             console.error('Error validating session:', error);
             setIsSessionValid(false);
-            setError('Failed to validate session');
+            // setError('Failed to validate session');
         }
     };
 
     const sendMessage = async (data: FormData) => {
-        // if (!isSessionValid) {
-        //     setError('Invalid session. Please log in again.');
-        //     return;
-        // }
-        const sessionID = localStorage.getItem('sessionID');
+        validateSessionID();
+        if (!isSessionValid) {
+            console.log("invalid session:" + isSessionValid);
+            //setError('Invalid session. Please log in again.');
+            setShowQRDialog(true);
+        }
+        const sessionID = localStorage.getItem('sessionID') as string;
+        console.log(sessionID);
         try {
             for (const p of places) {
-                
                 const send = async () => {
                     const response = await fetch(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/send`, {
                         method: 'POST',
@@ -84,20 +84,18 @@ export default function SendMessage() {
                             "SessionID": sessionID,
                         }),
                     });
-                    
-                    
+
+
                     if (!response.ok) {
                         throw new Error('Failed to send message: ' + response);
                     }
                     return await response.json();
                 }
                 await toast.promise(send(), {
-                    loading: `Sending message to ${p.name}` + p.international_phone_number,  
+                    loading: `Sending message to ${p.name}` + p.international_phone_number,
                     success: 'Message sent!',
                     error: 'Failed to send message!',
                 });
-                
-
                 // setStatus(`Message sent: ${result.message}`);
             }
         } catch (error) {
@@ -108,6 +106,11 @@ export default function SendMessage() {
                 console.log('An unknown error occurred');
             }
         }
+    };
+
+    const handleAuthenticated = () => {
+        setIsSessionValid(true);
+        setShowQRDialog(false);
     };
 
     const handleContacts = async () => {
@@ -161,7 +164,7 @@ export default function SendMessage() {
                         <Button type="submit">Send to {places.filter(place => place.international_phone_number).length} numbers</Button>
                     </form>
                 </Form>
-
+                <QRCodeDialog isOpen={showQRDialog} onClose={handleAuthenticated} />
                 {/* <form onSubmit={handleContacts} className='flex flex-col items-left justify-left w-full my-8'>
                     <Button type="submit">Get Contacts</Button>
                 </form> */}

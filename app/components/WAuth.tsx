@@ -2,39 +2,23 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { env } from '@/env';
 
-const WhatsAppAuth: React.FC = () => {
+interface WhatsAppAuthProps {
+    onSessionIdUpdate: (sessionId: string) => void;
+  }
+  
+
+const WhatsAppAuth: React.FC<WhatsAppAuthProps> = ({  }) => {
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [authStatus, setAuthStatus] = useState<string>('pending');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (sessionId) {
-            const eventSource = new EventSource(`${env.NEXT_PUBLIC_WA_SERVICE_URL}/auth-status?sessionID=${sessionId}`);
-
-            eventSource.onmessage = (event) => {
-                const status = event.data;
-                setAuthStatus(status);
-
-                if (status === 'authenticated') {
-                    eventSource.close();
-                }
-            };
-
-            eventSource.onerror = (error) => {
-                console.error('EventSource failed:', error);
-                eventSource.close();
-            };
-
-            return () => {
-                eventSource.close();
-            };
-        } else {
-            const sessionId = localStorage.getItem('sessionId');
-            setSessionId(sessionId);
-        }
-    }, [sessionId]);
+    // useEffect(() => {
+    //     if (sessionId) {
+    //       localStorage.setItem('sessionID', sessionId);
+    //     }
+    //   }, [sessionId]);
 
     const generateQRCode = async () => {
         setIsLoading(true);

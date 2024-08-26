@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 import { Inter as FontSans } from "next/font/google"
 import { cn } from "@/lib/utils"
@@ -16,21 +17,30 @@ interface LayoutProps {
 
 export const metadata: Metadata = {
   title: {
-    default: "TypeScript Next.js Stripe Example",
-    template: "%s | Next.js + TypeScript Example",
+    default: "Omnifunnel",
+    template: "%s | Omnifunnel",
   },
 };
 
 export default function RootLayout({ children }: LayoutProps) {
   return (
-    <html lang="en">
-      <body className={cn(
-        "min-h-screen bg-background font-sans antialiased",
-        fontSans.variable
-      )}>
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <header className="top-10 right-10 absolute"> <SignedOut>
+          <SignInButton />
+        </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+          </header>
+        <body className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}>
+          {children}
+          <Toaster />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
