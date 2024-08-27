@@ -1,6 +1,6 @@
 "use client";
 import PlacesList, { placesAtom } from "./PlacesList";
-import { atom, useAtom, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import {
     Form,
@@ -31,6 +31,7 @@ import {
 import { placesTypes } from "../data/Places";
 import { Loader2 } from "lucide-react";
 import { env } from "@/env";
+import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 
 interface MapLink {
     url: string;
@@ -317,7 +318,6 @@ const fetchPlaces = async (
 
 // Main component that combines all the parts
 export const MapLinksApp = () => {
-    const [mapLinks] = useAtom(mapLinksAtom);
     const [places] = useAtom(placesAtom);
 
     const form = useForm({
@@ -375,16 +375,23 @@ export const MapLinksApp = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <MapLinksList />
                     <SearchFilters />
-                    <Button type="submit" disabled={isLoading} id="fetchButton" className="my-6">
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Fetching Places...
-                            </>
-                        ) : (
-                            "Fetch Places"
-                        )}
-                    </Button>
+                    <SignedOut>
+                        <SignInButton>
+                            <Button type="button" className="my-6">Sign in to start</Button>
+                        </SignInButton>
+                    </SignedOut>
+                    <SignedIn>
+                        <Button type="submit" disabled={isLoading} id="fetchButton" className="my-6">
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Fetching Places...
+                                </>
+                            ) : (
+                                "Fetch Places"
+                            )}
+                        </Button>
+                    </SignedIn>
                     <script
                         src={`https://maps.googleapis.com/maps/api/js?key=${env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
                     ></script>

@@ -13,6 +13,10 @@ import {
 import { atom, useAtom } from "jotai";
 import { Loader2 } from "lucide-react";
 import { EnrichedPlace, enrichPlace } from "./Enrichment";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card"
+import { cn } from "@/lib/utils";
+import { addContactToGoogle } from "../auth/google";
+
 
 export const placesAtom = atom<EnrichedPlace[]>([]);
 export const currentPageAtom = atom(1);
@@ -22,6 +26,7 @@ export default function PlacesList() {
   const [places, setPlaces] = useAtom(placesAtom);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [googleIsLoading, setGoogleIsLoading] = useState(false);
   const [isEnriched, setIsEnriched] = useAtom(enrichAtom);
   const placesPerPage = 10;
   const indexOfLastPlace = currentPage * placesPerPage;
@@ -43,6 +48,20 @@ export default function PlacesList() {
     }
   };
 
+  const addCurrentPlacesToContacts = async () => {
+    if (!isEnriched) {
+      return;
+    }
+    setGoogleIsLoading(true);
+    for (const place of currentPlaces) {
+      try {
+        await addContactToGoogle((place.name as string || place.website as string), place.international_phone_number!);
+      } catch (error) {
+        console.error("Error adding contact to Google Contacts:", error);
+      }
+    };
+    setGoogleIsLoading(false);
+  }
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   const totalPages = Math.ceil(places.length / placesPerPage);
 
@@ -90,21 +109,51 @@ export default function PlacesList() {
                 </li>
               ))}
           </ul>
-          <Button
-            onClick={enrichCurrentPlaces}
-            disabled={isLoading}
-            className="my-4"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enriching Results...
-              </>
-            ) : (
-              "Enrich Results"
-            )}
-          </Button>
-          <Pagination>
+
+          <div className="flex flex-row justify-between items-center  ">
+            <Button
+              onClick={enrichCurrentPlaces}
+              disabled={isLoading}
+              className="w-1/2 mr-1"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enriching Results...
+                </>
+              ) : (
+                "Enrich Results"
+              )}
+            </Button>
+
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <Button
+                  onClick={addCurrentPlacesToContacts}
+                  className={cn(
+                    "bg-indigo-500 w-1/2 ml-1",
+                    (!isEnriched || googleIsLoading) && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding to Contacts...
+                    </>
+                  ) : (
+                    "Add to Google Contacts"
+                  )}
+                </Button>
+              </HoverCardTrigger>
+              {!isEnriched && (
+                <HoverCardContent>
+                  <p>Add businesses to your Google Contacts to see who responded to your messages. Enrich first to get phone numbers.</p>
+                </HoverCardContent>
+              )}
+            </HoverCard>
+          </div>
+
+          <Pagination className="mt-4">
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious onClick={() => paginate(currentPage - 1)} />

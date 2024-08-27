@@ -4,8 +4,11 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import WhatsAppAuth from '../components/WAuth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { atom, useAtom } from 'jotai'
+import { useSession } from '@clerk/nextjs';
+import { addContactToGoogle, getAllGoogleContacts } from '../auth/google';
+import { Button } from '@/components/ui/button';
 
 const sessionIdAtom = atom<string | null>(null);
 
@@ -19,6 +22,17 @@ const Home: NextPage = () => {
         }
     }, [setSessionId]);
     
+
+    const handleAddContact = async () => {
+        addContactToGoogle('Necoo', '+905340224278');
+    }
+
+    const [contacts, setContacts] = useState<any[]>([]);
+
+    const handleGetContacts = async () => {
+        const contacts = await getAllGoogleContacts();
+        setContacts(contacts);
+    }
     return (
         <>
             <Head>
@@ -29,6 +43,17 @@ const Home: NextPage = () => {
 
             <main className="flex flex-col items-center justify-center w-full">
                 {!sessionId && <WhatsAppAuth />}
+
+                {contacts.map((contact, index) => (
+                    <div key={index}>
+                        <p>{contact.name}</p>
+                        <p>{contact.phoneNumber}</p>
+                    </div>
+                ))}
+
+                
+                <Button onClick={handleAddContact}>Add Contact</Button>
+                <Button onClick={handleGetContacts}>Get Contacts</Button>
             </main>
         </>
     );
