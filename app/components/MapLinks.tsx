@@ -397,7 +397,7 @@ export const MapLinksApp = () => {
                     ></script>
                 </form>
             </Form>
-            {stage === 1 && (
+            { (
                 <div className="w-full">
                     <PlacesList />
                     {places.length > 0 && <SendMessage />}

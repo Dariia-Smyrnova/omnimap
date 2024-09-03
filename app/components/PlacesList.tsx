@@ -1,6 +1,4 @@
-// Function to call the Google Places API
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Pagination,
@@ -16,24 +14,65 @@ import { EnrichedPlace, enrichPlace } from "./Enrichment";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card"
 import { cn } from "@/lib/utils";
 import { addContactToGoogle } from "../auth/google";
-
+import { UpgradePlanDialog } from "./UpgradePlanDialog";
+import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabase";
 
 export const placesAtom = atom<EnrichedPlace[]>([]);
+export const isPaidAtom = atom(false);
 export const currentPageAtom = atom(1);
 export const enrichAtom = atom(false);
 
+
 export default function PlacesList() {
   const [places, setPlaces] = useAtom(placesAtom);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [googleIsLoading, setGoogleIsLoading] = useState(false);
   const [isEnriched, setIsEnriched] = useAtom(enrichAtom);
+  const [isPaid, setIsPaid] = useAtom(isPaidAtom);
   const placesPerPage = 10;
   const indexOfLastPlace = currentPage * placesPerPage;
   const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
   const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
+  const [userChecked, setUserChecked] = useState(false);
+  const { isLoaded, user } = useUser();
+
+  useEffect(() => {
+    if (isLoaded) {
+      const email = user?.primaryEmailAddress?.emailAddress;
+      if (email) {
+        checkUserProfile(email);
+      } else {
+        setUserChecked(true);
+      }
+    }
+  }, [isLoaded, user]);
+
+  const checkUserProfile = async (email: string) => {
+    const { data: dbuser, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+    }
+    if (dbuser) {
+      console.log('ispaid', dbuser.payment_status === 'paid');
+      setIsPaid(dbuser.payment_status === 'paid');
+    }
+    setUserChecked(true);
+  };
+
 
   const enrichCurrentPlaces = async () => {
+    if (!isPaid) {
+      setShowUpgradeModal(true);
+      return;
+    }
     setIsLoading(true);
     try {
       const enrichedPlaces = await Promise.all(
@@ -47,6 +86,15 @@ export default function PlacesList() {
       setIsLoading(false);
     }
   };
+
+  const testModal = () => {
+    setShowUpgradeModal(true);
+  }
+
+  const handleUpgradePlan = () => {
+    setShowUpgradeModal(false);
+    console.log("upgrade plan");
+  }
 
   const addCurrentPlacesToContacts = async () => {
     if (!isEnriched) {
@@ -64,6 +112,10 @@ export default function PlacesList() {
   }
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
   const totalPages = Math.ceil(places.length / placesPerPage);
+
+  if (!isLoaded || !userChecked) {
+    return <div>Loading...</div>; // Or any loading indicator you prefer
+  }
 
   return (
     <section className="flex flex-col items-center justify-center w-full py-8">
@@ -175,6 +227,9 @@ export default function PlacesList() {
           </Pagination>
         </div>
       )}
+      <Button onClick={testModal} variant={"destructive"}>Upgrade Plan</Button>
+      <UpgradePlanDialog isOpen={showUpgradeModal} onClose={handleUpgradePlan} />
+
     </section>
   );
 }
