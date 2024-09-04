@@ -12,7 +12,10 @@ export function UpgradePlanDialog({ isOpen, onClose }: UpgradePlanDialogProps) {
     const user = useUser().user;
         
     const onGetStarted = () => {
-        window.location.href = `https://powerupsandboosters.lemonsqueezy.com/buy/bbd87f5d-4ad5-4016-ab0c-c7e2e06a011f?checkout[email]=${user.primaryEmailAddress.emailAddress}&checkout[name]=${user.fullName}`;
+        const email = user?.primaryEmailAddress?.emailAddress as string;
+        const fullName = user?.fullName as string;
+        console.log('EMAIL', email, "FULLNAME", fullName);
+        window.location.href = `https://powerupsandboosters.lemonsqueezy.com/buy/bbd87f5d-4ad5-4016-ab0c-c7e2e06a011f?checkout[email]=${email}&checkout[name]=${fullName}`;
     };
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>

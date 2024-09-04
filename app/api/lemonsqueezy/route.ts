@@ -5,7 +5,6 @@ export const POST = async (req: NextRequest) => {
     try {
         let event = await req.json();
         event = event.data;
-        console.log("GOT event:",event);
         if (event.type === 'orders' && event.attributes.status === 'paid') {
             console.log('New order created:', event.id);
             const email = event.attributes.user_email;
@@ -14,9 +13,6 @@ export const POST = async (req: NextRequest) => {
                 .select('*')
                 .eq('email', email)
                 .single();
-
-            console.log("GOT user:",user);
-
             if (user) {
                 const { data, error: updateError } = await supabase
                     .from('user_profiles')
