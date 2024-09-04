@@ -32,12 +32,13 @@ export default function PlacesList() {
   const [googleIsLoading, setGoogleIsLoading] = useState(false);
   const [isEnriched, setIsEnriched] = useAtom(enrichAtom);
   const [isPaid, setIsPaid] = useAtom(isPaidAtom);
+  const [userChecked, setUserChecked] = useState(false);
+  const { isLoaded, user } = useUser();
+
   const placesPerPage = 10;
   const indexOfLastPlace = currentPage * placesPerPage;
   const indexOfFirstPlace = indexOfLastPlace - placesPerPage;
   const currentPlaces = places.slice(indexOfFirstPlace, indexOfLastPlace);
-  const [userChecked, setUserChecked] = useState(false);
-  const { isLoaded, user } = useUser();
 
   useEffect(() => {
     if (isLoaded) {
@@ -114,7 +115,7 @@ export default function PlacesList() {
   const totalPages = Math.ceil(places.length / placesPerPage);
 
   if (!isLoaded || !userChecked) {
-    return <div>Loading...</div>; // Or any loading indicator you prefer
+    return <div>Loading...</div>;
   }
 
   return (
@@ -187,7 +188,7 @@ export default function PlacesList() {
                     (!isEnriched || googleIsLoading) && "opacity-50 cursor-not-allowed"
                   )}
                 >
-                  {isLoading ? (
+                  {googleIsLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Adding to Contacts...
